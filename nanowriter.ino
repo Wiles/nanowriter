@@ -42,8 +42,8 @@ char layer_a[] = {
 
 void setup() {
 
-  DDRD = B00000010;
-  PORTD |= B11111100;
+  DDRB = B00000000;
+  PORTB |= B11111111;
   
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
@@ -52,7 +52,7 @@ void setup() {
 }
 
 int readButtons() {
-  return (~(PIND >> 3)) & B00011111;
+  return (~(PINB >> 2)) & B00011111;
 }
 
 String decodeInput(int input) {
