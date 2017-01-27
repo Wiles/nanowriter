@@ -1,12 +1,7 @@
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-
-#define OLED_RESET 4
-
-Adafruit_SSD1306 display(OLED_RESET);
+#include <Keyboard.h>
 
 char layer_a[] = {
-   ' ', //B00000
+   0, //B00000
    'u', //B00001
    's', //B00010
    'g', //B00011
@@ -45,28 +40,31 @@ void setup() {
   DDRB = B00000000;
   PORTB |= B11111111;
   
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display.clearDisplay();
-  display.display();
-
+  Keyboard.begin();
 }
 
 int readButtons() {
   return (~(PINB >> 2)) & B00011111;
 }
 
-String decodeInput(int input) {
-  return String(layer_a[input]);
+char decodeInput(int input) {
+  return layer_a[input];
 }
+
+char prevCharacter = 0;
 
 void loop() {
-  String character = decodeInput(readButtons());
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  display.setTextSize(3);
-  display.print(character);
-  display.display();
+  char firstRead = readButtons();
+  delay(25);
+  char secondRead = readButtons();
+  if (firstRead == secondRead) {
+    char character = decodeInput(firstRead);
+    if (character != prevCharacter) {
+      prevCharacter = character;
+      if (character != 0) {
+        Keyboard.write(character);
+      }
+    }
+  }
 }
-
 
