@@ -60,9 +60,10 @@ void loop() {
   if (firstRead == secondRead) {
     char character = decodeInput(firstRead);
     if (character != prevCharacter) {
+      Keyboard.release(prevCharacter);
       prevCharacter = character;
       if (character != 0) {
-        Keyboard.write(character);
+        Keyboard.press(character);
       }
     }
   }
