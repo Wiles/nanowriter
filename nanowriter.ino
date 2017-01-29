@@ -5,24 +5,24 @@
 #define NUMERIC_LAYER 2
 
 char layers[][4] = {
-    {0,    0,    0}, //B00000
+    {0 /* shift */,    0,    0}, //B00000
     {0,  'u',  '6'}, //B00001
-    {0xB2,  's',  '$'}, //B00010
+    {KEY_BACKSPACE,  's',  '$'}, //B00010
     {0,  'g',  '7'}, //B00011
     {0,  'o',  '0'}, //B00100
     {0,  'q',  ')'}, //B00101
     {0,  'n',  '"'}, //B00110
     {0,  'b',  '8'}, //B00111
-    {0,  'e',  '1'}, //B01000
+    {KEY_RETURN,  'e',  '1'}, //B01000
     {0,  'v',  '%'}, //B01001
-    {0,  't',  '+'}, //B01010
+    {KEY_TAB,  't',  '+'}, //B01010
     {0,  ',',  ','}, //B01011
     {0,  'a',  '*'}, //B01100
     {0,  '-',  '!'}, //B01101
     {0,  '.',  '.'}, //B01110
     {0,  'm',  '9'}, //B01111
 
-    {0,  ' ',  ' '}, //B10000
+    {0 /* ctrl */,  ' ',  ' '}, //B10000
     {0,  'h',  '-'}, //B10001
     {0,  'k',  '/'}, //B10010
     {0,  'j',  '='}, //B10011
@@ -30,15 +30,21 @@ char layers[][4] = {
     {0,  'z',  '%'}, //B10101
     {0,  'y',  '?'}, //B10110
     {0,  'x',  'x'}, //B10111
-    {0,  'i',  '2'}, //B11000
+    {KEY_LEFT_CTRL ,  'i',  '2'}, //B11000
     {0,  'l',  '£'}, //B11001
-    {0,  'r',  ';'}, //B11010
+    {0 /* win */,  'r',  ';'}, //B11010
     {0,  'w',  ':'}, //B11011
-    {0,  'd',  '3'}, //B11100
+    {0 /* alt */,  'd',  '3'}, //B11100
     {0, '\'',  '&'}, //B11101
-    {0,  'f',  '4'}, //B11110
+    {0 /* clear state */,  'f',  '4'}, //B11110
     {0,  'p',  '5'}  //B11111
 };
+
+#define TOGGLE_COUNT 24
+bool toggles[TOGGLE_COUNT] = {};
+
+char prevInput = 0;
+char prevCharacter = 0;
 
 char currentLayer = ALPHA_LAYER;
 bool commandClear = true;
@@ -55,19 +61,45 @@ char readButtons() {
   return (~(PINB >> 1)) & B00111111;
 }
 
+void toggleKey(char key) {
+  if (!toggles[key >> 7]) {
+    toggles[key >> 7] = true;
+    Keyboard.press(key);
+  } else {
+    toggles[key >> 7] = false;
+    Keyboard.release(key);
+  }
+}
+
+void resetState() {
+  Keyboard.releaseAll();
+  currentLayer = ALPHA_LAYER;
+  for(char i = 0; i < TOGGLE_COUNT; ++i) {
+    toggles[i] = false;
+  }
+}
+
 char decodeInput(char input) {
   if (input & 1) {
     switch(input){
       case B000001:
-        Keyboard.press(KEY_LEFT_SHIFT);
-        break;
-      case B000011:
-        Keyboard.releaseAll();
-        currentLayer = ALPHA_LAYER;
-        break;
+        toggleKey(KEY_LEFT_SHIFT);
+        return 0;
+      case B111101:
+        resetState();
+        return 0;
+      case B100001:
+        toggleKey(KEY_LEFT_CTRL);
+        return 0;
+      case B110001:
+        toggleKey(KEY_LEFT_GUI);
+        return 0;
+      case B111001:
+        toggleKey(KEY_LEFT_ALT);
+        return 0;
       case B001101:
         currentLayer = NUMERIC_LAYER;
-        break;
+        return 0;
     }
     commandClear = false;
     return layers[input >> 1][CMD_LAYER];
@@ -76,15 +108,14 @@ char decodeInput(char input) {
   }
 }
 
-char prevCharacter = 0;
-
 void loop() {
   char firstRead = readButtons();
   delay(25);
   char secondRead = readButtons();
   if (firstRead == secondRead) {
-    char character = decodeInput(firstRead);
-    if (character != prevCharacter) {
+    if (firstRead != prevInput) {
+      prevInput = firstRead;
+      char character = decodeInput(firstRead);
       Keyboard.release(prevCharacter);
       prevCharacter = character;
       if (character != 0) {
