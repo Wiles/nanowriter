@@ -55,7 +55,6 @@ void setup() {
   PORTB |= B11111111;
 
   Keyboard.begin();
-  Serial.begin(9600);
 }
 
 char readButtons() {
@@ -84,7 +83,7 @@ char decodeInput(char input) {
   if (input & 1) {
     switch(input){
       case B000001:
-        toggleKey(KEY_LEFT_SHIFT);ute
+        toggleKey(KEY_LEFT_SHIFT);
         return 0;
       case B111101:
         resetState();
