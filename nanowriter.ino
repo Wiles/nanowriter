@@ -55,18 +55,19 @@ void setup() {
   PORTB |= B11111111;
 
   Keyboard.begin();
+  Serial.begin(9600);
 }
 
 char readButtons() {
-  return (~(PINB >> 1)) & B00111111;
+  return (~(PINB)) & B00111111;
 }
 
 void toggleKey(char key) {
-  if (!toggles[key >> 7]) {
-    toggles[key >> 7] = true;
+  if (!toggles[key ^ 80]) {
+    toggles[key ^ 80] = true;
     Keyboard.press(key);
   } else {
-    toggles[key >> 7] = false;
+    toggles[key ^ 80] = false;
     Keyboard.release(key);
   }
 }
@@ -83,7 +84,7 @@ char decodeInput(char input) {
   if (input & 1) {
     switch(input){
       case B000001:
-        toggleKey(KEY_LEFT_SHIFT);
+        toggleKey(KEY_LEFT_SHIFT);ute
         return 0;
       case B111101:
         resetState();
@@ -119,9 +120,9 @@ void loop() {
       Keyboard.release(prevCharacter);
       prevCharacter = character;
       if (character != 0) {
+        Serial.println(character);
         Keyboard.press(character);
-      }
+      } 
     }
   }
 }
-
