@@ -1,5 +1,8 @@
 *.bak
 *.dsn
+*.gcode
+*.stl
+*.hex
 *.kicad_pcb-bak
 **/gerber/
 
